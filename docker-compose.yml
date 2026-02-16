@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: nexus_user
+      POSTGRES_PASSWORD: nexus_password
+      POSTGRES_DB: nexus_db
     ports:
       - "5432:5432"
     volumes:
@@ -21,6 +21,21 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
+  api:
+    build: ./api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api:/app
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: nexus_user
+      DB_PASSWORD: nexus_password
+      DB_NAME: nexus_db
 
 volumes:
   postgres_data:
