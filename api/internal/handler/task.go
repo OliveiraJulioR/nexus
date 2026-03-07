@@ -9,12 +9,14 @@ import (
 type TaskHandler struct {
 	CreateTaskUseCase   *usecase.CreateTaskUseCase
 	UpdateStatusUseCase *usecase.UpdateStatusUseCase
+	FindAllUseCase      *usecase.FindAllUseCase
 }
 
-func NewTaskHandler(createTaskUseCase *usecase.CreateTaskUseCase, updateStatusUseCase *usecase.UpdateStatusUseCase) *TaskHandler {
+func NewTaskHandler(createTaskUseCase *usecase.CreateTaskUseCase, updateStatusUseCase *usecase.UpdateStatusUseCase, findAllUseCase *usecase.FindAllUseCase) *TaskHandler {
 	return &TaskHandler{
 		CreateTaskUseCase:   createTaskUseCase,
 		UpdateStatusUseCase: updateStatusUseCase,
+		FindAllUseCase:      findAllUseCase,
 	}
 }
 
@@ -68,4 +70,14 @@ func (h *TaskHandler) UpdateStatus(c *gin.Context) {
 		"task":    taskAtualizada,
 		"status":  input.Status,
 	})
+}
+
+func (h *TaskHandler) FindAll(c *gin.Context) {
+	tasks, err := h.FindAllUseCase.Execute(c.Request.Context())
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, tasks)
 }
