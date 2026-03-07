@@ -1,7 +1,10 @@
-// Executa a criação da task e persiste no banco	
+// Executa a criação da task e persiste no banco
 package usecase
 
 import (
+	"context"
+	"time"
+
 	"github.com/OliveiraJulioR/nexus/api/internal/entity"
 	"github.com/OliveiraJulioR/nexus/api/internal/repository"
 )
@@ -19,11 +22,14 @@ func NewCreateTaskUseCase(repository repository.TaskRepository) *CreateTaskUseCa
 	return &CreateTaskUseCase{repo: repository}
 }
 
-func (u *CreateTaskUseCase) Execute(input CreateTaskInput) (*entity.Task, error) {
+func (u *CreateTaskUseCase) Execute(ctx context.Context, input CreateTaskInput) (*entity.Task, error) {
 	task := &entity.Task{
 		Title:       input.Title,
 		Description: input.Description,
+		Status:      "PENDING",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
-	return u.repo.Create(task)
+	return u.repo.Create(ctx, task)
 }
