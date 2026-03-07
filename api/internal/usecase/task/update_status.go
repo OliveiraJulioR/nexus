@@ -8,26 +8,29 @@ import (
 )
 
 type UpdateStatusInput struct {
-	Status string `json:title`
+	Status string `json:"status" binding:"required"`
 }
 
 type UpdateStatusUseCase struct {
-	ID   string
 	repo repository.TaskRepository
 }
 
-func NewUpdateStatusUseCase(ID string, repository repository.TaskRepository) *UpdateStatusUseCase {
-	return &UpdateStatusUseCase{ID: ID, repo: repository}
+func NewUpdateStatusUseCase(repository repository.TaskRepository) *UpdateStatusUseCase {
+	return &UpdateStatusUseCase{repo: repository}
 }
 
-func (u *UpdateStatusUseCase) Execute(ctx context.Context, input UpdateStatusInput) (*entity.Task, error) {
-	task, err := u.repo.FindByID(ctx, u.ID)
+func (u *UpdateStatusUseCase) Execute(ctx context.Context, ID string, status entity.TaskStatus) (*entity.Task, error) {
+	task, err := u.repo.FindByID(ctx, ID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	task.Status = input.Status
+	if task == nil {
+		return nil, nil
+	}
+
+	task.Status = status
 
 	return u.repo.Update(ctx, task)
 }

@@ -15,9 +15,10 @@ func SetupRouter(postgresPool *pgxpool.Pool, redisClient *redis.Client) *gin.Eng
 	taskRepository := implementations.NewTaskPostgresRepository(postgresPool)
 
 	createTaskUseCase := usecase.NewCreateTaskUseCase(taskRepository)
+	updateStatusUseCase := usecase.NewUpdateStatusUseCase(taskRepository)
 
 	healthHandler := handler.NewHealthHandler(postgresPool, redisClient)
-	taskHandler := handler.NewTaskHandler(createTaskUseCase)
+	taskHandler := handler.NewTaskHandler(createTaskUseCase, updateStatusUseCase)
 
 	health := r.Group("/health")
 	{
@@ -28,6 +29,7 @@ func SetupRouter(postgresPool *pgxpool.Pool, redisClient *redis.Client) *gin.Eng
 	task := r.Group("/task")
 	{
 		task.POST("/", taskHandler.CreateTask)
+		task.PATCH("/:id/status", taskHandler.UpdateStatus)
 	}
 
 	return r
