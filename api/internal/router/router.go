@@ -35,6 +35,9 @@ func SetupRouter(postgresPool *pgxpool.Pool, redisClient *redis.Client) *gin.Eng
 		task.POST("/", taskHandler.CreateTask)
 		task.PATCH("/:id/status", taskHandler.UpdateStatus)
 		task.GET("/", taskHandler.FindAll)
+		task.GET("/:id", taskHandler.FindByID)
+		task.DELETE("/:id", taskHandler.Delete)
+		task.PUT("/:id", taskHandler.Update)
 	}
 
 	return r
