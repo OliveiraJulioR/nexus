@@ -5,6 +5,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/OliveiraJulioR/nexus/api/internal/entity"
 	"github.com/OliveiraJulioR/nexus/api/internal/repository"
 )
@@ -23,7 +25,14 @@ func NewCreateTaskUseCase(repository repository.TaskRepository) *CreateTaskUseCa
 }
 
 func (u *CreateTaskUseCase) Execute(ctx context.Context, input CreateTaskInput) (*entity.Task, error) {
+
+	ID, err := uuid.NewV7()
+	if err != nil {
+		return nil, err
+	}
+
 	task := &entity.Task{
+		ID:          ID.String(),
 		Title:       input.Title,
 		Description: input.Description,
 		Status:      entity.StatusTodo,

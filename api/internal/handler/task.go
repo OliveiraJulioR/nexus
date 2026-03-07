@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/OliveiraJulioR/nexus/api/internal/entity"
 	usecase "github.com/OliveiraJulioR/nexus/api/internal/usecase/task"
 	"github.com/gin-gonic/gin"
@@ -34,7 +36,15 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, result)
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+	response := BuildTaskResponse(result, baseURL)
+
+	c.JSON(201, response)
 }
 
 func (h *TaskHandler) UpdateStatus(c *gin.Context) {
@@ -63,13 +73,15 @@ func (h *TaskHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	// 5. Retorna sucesso
-	c.JSON(200, gin.H{
-		"message": "Status atualizado com sucesso!",
-		"id":      id,
-		"task":    taskAtualizada,
-		"status":  input.Status,
-	})
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+	response := BuildTaskResponse(taskAtualizada, baseURL)
+
+	c.JSON(201, response)
 }
 
 func (h *TaskHandler) FindAll(c *gin.Context) {
@@ -79,5 +91,14 @@ func (h *TaskHandler) FindAll(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, tasks)
+	baseURL := "http://" + c.Request.Host // Simplificado
+
+	var responseList []TaskResponse
+	for _, t := range tasks {
+		// Precisamos passar o ponteiro &t porque a variável no loop é uma cópia
+		taskCopy := t
+		responseList = append(responseList, BuildTaskResponse(&taskCopy, baseURL))
+	}
+
+	c.JSON(200, responseList)
 }
