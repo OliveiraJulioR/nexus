@@ -1,24 +1,32 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/OliveiraJulioR/nexus/api/internal/entity"
 	usecase "github.com/OliveiraJulioR/nexus/api/internal/usecase/task"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 type TaskHandler struct {
 	CreateTaskUseCase   *usecase.CreateTaskUseCase
 	UpdateStatusUseCase *usecase.UpdateStatusUseCase
 	FindAllUseCase      *usecase.FindAllUseCase
+	FindByIDUseCase     *usecase.FindByIDUseCase
+	DeleteTaskUseCase   *usecase.DeleteTaskUseCase
+	UpdateTaskUseCase   *usecase.UpdateTaskUseCase
 }
 
-func NewTaskHandler(createTaskUseCase *usecase.CreateTaskUseCase, updateStatusUseCase *usecase.UpdateStatusUseCase, findAllUseCase *usecase.FindAllUseCase) *TaskHandler {
+func NewTaskHandler(createTaskUseCase *usecase.CreateTaskUseCase, updateStatusUseCase *usecase.UpdateStatusUseCase, findAllUseCase *usecase.FindAllUseCase, findByIDUseCase *usecase.FindByIDUseCase, deleteUsCase *usecase.DeleteTaskUseCase, updateTaskUseCase *usecase.UpdateTaskUseCase) *TaskHandler {
 	return &TaskHandler{
 		CreateTaskUseCase:   createTaskUseCase,
 		UpdateStatusUseCase: updateStatusUseCase,
 		FindAllUseCase:      findAllUseCase,
+		FindByIDUseCase:     findByIDUseCase,
+		DeleteTaskUseCase:   deleteUsCase,
+		UpdateTaskUseCase:   updateTaskUseCase,
 	}
 }
 
@@ -101,4 +109,67 @@ func (h *TaskHandler) FindAll(c *gin.Context) {
 	}
 
 	c.JSON(200, responseList)
+}
+
+func (h *TaskHandler) FindByID(c *gin.Context) {
+	id := c.Param("id")
+
+	task, err := h.FindByIDUseCase.Execute(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(404, gin.H{"error": "Task not found"})
+			return
+		}
+
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+	response := BuildTaskResponse(task, baseURL)
+
+	c.JSON(200, response)
+}
+
+func (h *TaskHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	err := h.DeleteTaskUseCase.Execute(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(204, nil)
+}
+
+func (h *TaskHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input usecase.UpdateTaskInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := h.UpdateTaskUseCase.Execute(c, id, input)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+	response := BuildTaskResponse(result, baseURL)
+
+	c.JSON(200, response)
 }
