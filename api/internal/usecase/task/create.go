@@ -26,7 +26,7 @@ func (u *CreateTaskUseCase) Execute(ctx context.Context, input CreateTaskInput) 
 	task := &entity.Task{
 		Title:       input.Title,
 		Description: input.Description,
-		Status:      "PENDING",
+		Status:      entity.StatusTodo,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}

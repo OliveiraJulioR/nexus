@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/OliveiraJulioR/nexus/api/internal/entity"
 	"github.com/OliveiraJulioR/nexus/api/internal/repository"
 )
@@ -18,8 +20,8 @@ func NewUpdateStatusUseCase(ID string, repository repository.TaskRepository) *Up
 	return &UpdateStatusUseCase{ID: ID, repo: repository}
 }
 
-func (u *UpdateStatusUseCase) Execute(input UpdateStatusInput) (*entity.Task, error) {
-	task, err := u.repo.FindByID(u.ID)
+func (u *UpdateStatusUseCase) Execute(ctx context.Context, input UpdateStatusInput) (*entity.Task, error) {
+	task, err := u.repo.FindByID(ctx, u.ID)
 
 	if err != nil {
 		return nil, err
@@ -27,5 +29,5 @@ func (u *UpdateStatusUseCase) Execute(input UpdateStatusInput) (*entity.Task, er
 
 	task.Status = input.Status
 
-	return u.repo.Update(task)
+	return u.repo.Update(ctx, task)
 }
